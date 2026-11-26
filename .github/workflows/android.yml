@@ -21,14 +21,25 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Preparar projeto
+        run: |
+          mkdir -p project
+          unzip -q SSPlayer-Android-Base-v3.zip -d project
+          PROJECT_DIR=$(dirname "$(find project -name settings.gradle.kts -print -quit)")
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "Projeto Gradle não encontrado dentro do ZIP"
+            exit 1
+          fi
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Compilar APK
-        run: gradle assembleDebug
+        run: gradle -p "$PROJECT_DIR" assembleDebug
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
           name: SSPlayer-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: project/**/app/build/outputs/apk/debug/*.apk
