@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Baixar código
+      - name: Baixar codigo
         uses: actions/checkout@v4
 
       - name: Configurar Java
@@ -21,36 +21,30 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Configurar Gradle compativel
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
       - name: Preparar projeto
         run: |
           mkdir -p project
-          ZIP_FILE=$(find . -maxdepth 2 -type f -name 'SSPlayer-Android-Base.zip' | head -n 1)
-
+          ZIP_FILE=$(find . -maxdepth 2 -type f -name "*.zip" | head -n 1)
           if [ -z "$ZIP_FILE" ]; then
-            echo "ZIP do SSPlayer não encontrado"
+            echo "ZIP do SSPlayer nao encontrado"
             exit 1
           fi
-
           unzip -q "$ZIP_FILE" -d project
-
-          GRADLE_FILE=$(find project -name settings.gradle.kts -type f | head -n 1)
-
+          GRADLE_FILE=$(find project -name settings.gradle.kts | head -n 1)
           if [ -z "$GRADLE_FILE" ]; then
-            echo "settings.gradle.kts não encontrado"
+            echo "settings.gradle.kts nao encontrado"
             exit 1
           fi
-
           PROJECT_DIR=$(dirname "$GRADLE_FILE")
-
-          sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' "$PROJECT_DIR/app/build.gradle.kts"
-
-          echo "Projeto preparado em: $PROJECT_DIR"
-          cat "$PROJECT_DIR/app/build.gradle.kts"
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       - name: Compilar APK
         run: |
-          GRADLE_FILE=$(find project -name settings.gradle.kts -type f | head -n 1)
-          PROJECT_DIR=$(dirname "$GRADLE_FILE")
           cd "$PROJECT_DIR"
           gradle assembleDebug
 
@@ -59,3 +53,4 @@ jobs:
         with:
           name: SSPlayer-APK
           path: project/**/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
