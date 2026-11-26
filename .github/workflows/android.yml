@@ -24,24 +24,29 @@ jobs:
       - name: Encontrar e extrair projeto
         run: |
           ZIP_FILE=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
+
           if [ -z "$ZIP_FILE" ]; then
             echo "Nenhum arquivo ZIP encontrado"
             exit 1
           fi
+
           mkdir project
           unzip -q "$ZIP_FILE" -d project
+
           GRADLE_FILE=$(find project -name settings.gradle.kts -print -quit)
+
           if [ -z "$GRADLE_FILE" ]; then
-            echo "Arquivo settings.gradle.kts não encontrado"
-            find project -maxdepth 3 -type f
+            echo "Projeto Gradle não encontrado"
+            find project -maxdepth 4 -type f
             exit 1
           fi
+
           echo "PROJECT_DIR=$(dirname "$GRADLE_FILE")" >> "$GITHUB_ENV"
 
       - name: Configurar Gradle
-  uses: gradle/actions/setup-gradle@v4
-  with:
-    gradle-version: '8.13'
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
 
       - name: Compilar APK
         run: gradle -p "$PROJECT_DIR" assembleDebug
