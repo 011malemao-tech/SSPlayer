@@ -1,3 +1,4 @@
+
 name: Build SSPlayer APK
 
 on:
@@ -20,21 +21,29 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
       - name: Preparar projeto
         run: |
           mkdir -p project
           ZIP_FILE=$(find . -maxdepth 2 -name "SSPlayer-Android-Base*.zip" | head -n 1)
+
           if [ -z "$ZIP_FILE" ]; then
             echo "ZIP do SSPlayer não encontrado"
             exit 1
           fi
+
           unzip -q "$ZIP_FILE" -d project
+
           GRADLE_FILE=$(find project -name settings.gradle.kts | head -n 1)
+
           if [ -z "$GRADLE_FILE" ]; then
             echo "settings.gradle.kts não encontrado"
             exit 1
           fi
-          PROJECT_DIR=$(dirname "$GRADLE_FILE")
 
       - name: Compilar APK
         run: |
