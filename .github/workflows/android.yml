@@ -21,16 +21,22 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Preparar projeto
+      - name: Encontrar e extrair projeto
         run: |
-          mkdir -p project
-          unzip -q SSPlayer-Android-Base-v3.zip -d project
-          PROJECT_DIR=$(dirname "$(find project -name settings.gradle.kts -print -quit)")
-          if [ -z "$PROJECT_DIR" ]; then
-            echo "Projeto Gradle não encontrado dentro do ZIP"
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "Nenhum arquivo ZIP encontrado"
             exit 1
           fi
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          mkdir project
+          unzip -q "$ZIP_FILE" -d project
+          GRADLE_FILE=$(find project -name settings.gradle.kts -print -quit)
+          if [ -z "$GRADLE_FILE" ]; then
+            echo "Arquivo settings.gradle.kts não encontrado"
+            find project -maxdepth 3 -type f
+            exit 1
+          fi
+          echo "PROJECT_DIR=$(dirname "$GRADLE_FILE")" >> "$GITHUB_ENV"
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
